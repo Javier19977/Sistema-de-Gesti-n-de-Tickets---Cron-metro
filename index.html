@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Tickets - Cronómetro</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Gestión de Tickets</h1>
+
+        <!-- Formulario para agregar usuario y asignar técnico -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Nuevo ticket</h5>
+                <form id="ticketForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="userName" class="form-label">Nombre del responsable</label>
+                            <input type="text" class="form-control" id="userName" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="serie" class="form-label">Serie del Equipo</label>
+                            <input type="text" class="form-control" id="serie" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="falla" class="form-label">Falla del Equipo</label>
+                            <select class="form-select" id="falla" required>
+                                <option value="">Seleccione una falla</option>
+                                <option value="No carga">No carga</option>
+                                <option value="Cargador dañado">Cargador dañado</option>
+                                <option value="Cámara no funciona">Cámara no funciona</option>
+                                <option value="Micrófono no funciona">Micrófono no funciona</option>
+                                <option value="Motherboard dañada">Motherboard dañada</option>
+                                <option value="Falla de video">Falla de video</option>
+                                <option value="Falla de audio">Falla de audio</option>
+                                <option value="Puerto de carga dañado">Puerto de carga dañado</option>
+                                <option value="Equipo se reinicia">Equipo se reinicia</option>
+                                <option value="Sobrecalentamiento">Sobrecalentamiento</option>
+                                <option value="Falla de táctil">Falla de táctil</option>
+                                <option value="Falla en bandeja de tarjeta SIM">Falla en bandeja de tarjeta SIM</option>
+                                <option value="Bandeja de chip faltante">Bandeja de chip faltante</option>
+                                <option value="Por falta de cargador">Por falta de cargador</option>
+                                <option value="Pantalla quebrada">Pantalla quebrada</option>
+                                <option value="Puerto de carga quebrado">Puerto de carga quebrado</option>
+                                <option value="Pantalla dañada">Pantalla dañada</option>
+                                <option value="Pérdida total (equipo mojado)">Pérdida total (equipo mojado)</option>
+                                <option value="Falla de táctil (equipo mojado)">Falla de táctil (equipo mojado)</option>
+                                <option value="No enciende">No enciende</option>
+                                <option value="Teclado no funciona">Teclado no funciona</option>
+                                <option value="Mousepad no funciona">Mousepad no funciona</option>
+                                <option value="Touchpad no funciona">Touchpad no funciona</option>
+                                <option value="Almacenamiento dañado">Almacenamiento dañado</option>
+                                <option value="Puerto USB dañado">Puerto USB dañado</option>
+                                <option value="Tarjeta de red (inalámbrica) dañada">Tarjeta de red (inalámbrica) dañada</option>
+                                <option value="Contraseña de BIOS">Contraseña de BIOS</option>
+                                <option value="Falla de la batería de CMOS">Falla de la batería de CMOS</option>
+                                <option value="Ventilador de disipador">Ventilador de disipador</option>
+                                <option value="Motherboard dañada (invasión de insectos)">Motherboard dañada (invasión de insectos)</option>
+                                <option value="Motherboard dañada (derrame de líquido)">Motherboard dañada (derrame de líquido)</option>
+                                <option value="Carcasa dañada">Carcasa dañada</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="tecnico" class="form-label">Técnico Asignado</label>
+                            <select class="form-select" id="tecnico" required>
+                                <option value="">Seleccione un técnico</option>
+                                <option value="Carlos Vargas">Carlos Vargas</option>
+                                <option value="Alexis Paniagua">Alexis Paniagua</option>
+                                <option value="Kemdall Blanco">Kemdall Blanco</option>
+                                <option value="Daniel Nerio">Daniel Nerio</option>
+                                <option value="Raúl Cruz">Raúl Cruz</option>
+                                <option value="Alexander Gómez">Alexander Gómez</option>
+                                <option value="Geraldina Trujillo">Geraldina Trujillo</option>
+                                <option value="David Sermeño">David Sermeño</option>
+                                <option value="Henry Marroquín">Henry Marroquín</option>
+                                <option value="William Martínez">William Martínez</option>
+                                <option value="Carlos Rivas">Carlos Rivas</option>
+                                <option value="Wilber Del Cid">Wilber Del Cid</option>
+                                <option value="Douglas Hernández">Douglas Hernández</option>
+                                <option value="Victor Latin">Victor Latin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Asignar Técnico</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de tickets en cuadrícula -->
+        <div id="ticketList" class="row g-4"></div>
+    </div>
+
+    <!-- Incluye el archivo de JavaScript justo antes del cierre del body -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/ticket-management.js"></script>
+</body>
+</html>
