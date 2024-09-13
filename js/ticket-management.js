@@ -70,7 +70,6 @@ function eliminarTicket(ticketId) {
     }
 
     tickets = tickets.filter(serie => serie !== document.getElementById(`serie-${ticketId}`).textContent);
-    guardarTicketsEnLocalStorage();
 }
 
 // Agregar ticket
@@ -105,22 +104,6 @@ function agregarTicket(usuario, serie, falla, tecnico) {
 
     document.getElementById('ticketList').insertAdjacentHTML('beforeend', ticketHTML);
     iniciarCronometro(ticketId);
-    guardarTicketsEnLocalStorage();
-}
-
-// Guardar tickets en localStorage
-function guardarTicketsEnLocalStorage() {
-    localStorage.setItem('tickets', JSON.stringify(tickets));
-}
-
-// Cargar tickets desde localStorage
-function cargarTicketsDesdeLocalStorage() {
-    const ticketsGuardados = JSON.parse(localStorage.getItem('tickets'));
-    if (ticketsGuardados) {
-        ticketsGuardados.forEach(ticket => {
-            agregarTicket(ticket.usuario, ticket.serie, ticket.falla, ticket.tecnico);
-        });
-    }
 }
 
 // Evento para el formulario de tickets
@@ -155,8 +138,3 @@ document.getElementById('ticketForm').addEventListener('submit', function(event)
     agregarTicket(usuario, serie, falla, tecnico);
     document.getElementById('ticketForm').reset();
 });
-
-// Cargar tickets desde localStorage al iniciar la página
-window.onload = function() {
-    cargarTicketsDesdeLocalStorage();
-}
