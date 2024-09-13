@@ -1,9 +1,7 @@
-// main.js
-
 const tecnicos = [
-    "Carlos Vargas", "Alexis Paniagua", "Kemdall Blanco", "Daniel Nerio", 
-    "Raúl Cruz", "Alexander Gómez", "Geraldina Trujillo", "David Sermeño", 
-    "Henry Marroquín", "William Martínez", "Carlos Rivas", "Wilber Del Cid", 
+    "Carlos Vargas", "Alexis Paniagua", "Kemdall Blanco", "Daniel Nerio",
+    "Raúl Cruz", "Alexander Gómez", "Geraldina Trujillo", "David Sermeño",
+    "Henry Marroquín", "William Martínez", "Carlos Rivas", "Wilber Del Cid",
     "Douglas Hernández", "Victor Latin"
 ];
 
@@ -30,8 +28,8 @@ function actualizarColorCronometro(tiempoTranscurrido) {
 }
 
 // Iniciar cronómetro
-function iniciarCronometro(ticketId) {
-    let tiempoTranscurrido = 0;
+function iniciarCronometro(ticketId, tiempoInicial = 0) {
+    let tiempoTranscurrido = tiempoInicial;
 
     const interval = setInterval(() => {
         tiempoTranscurrido++;
@@ -59,15 +57,12 @@ function finalizarTicket(ticketId) {
         }
         
         // Actualizar ticket en IndexedDB
-        const ticket = {
-            id: ticketId,
-            usuario: document.querySelector(`[data-ticket-id="${ticketId}"] .card-text:nth-of-type(1)`).textContent.split(': ')[1],
-            serie: document.getElementById(`serie-${ticketId}`).textContent,
-            falla: document.querySelector(`[data-ticket-id="${ticketId}"] .card-text:nth-of-type(3)`).textContent.split(': ')[1],
-            tecnico: document.querySelector(`[data-ticket-id="${ticketId}"] .card-text:nth-of-type(4)`).textContent.split(': ')[1],
-            tiempo: parseInt(document.getElementById(`timer-${ticketId}`).textContent.split(' ')[1])
-        };
-        actualizarTicketDB(ticket);
+        const ticket = tickets.find(ticket => ticket.id === ticketId);
+        if (ticket) {
+            ticket.estado = 'finalizado';
+            ticket.tiempo = parseInt(document.getElementById(`timer-${ticketId}`).textContent.split(' ')[1]); // Actualizar tiempo
+            updateTicket(ticket);
+        }
     }
 }
 
@@ -83,84 +78,66 @@ function eliminarTicket(ticketId) {
         ticketElement.remove();
     }
 
-    tickets = tickets.filter(serie => serie !== document.getElementById(`serie-${ticketId}`).textContent);
-    eliminarTicketDB(ticketId);
+    // Eliminar del array de tickets
+    tickets = tickets.filter(ticket => ticket.id !== ticketId);
+
+    // Eliminar de la base de datos
+    deleteTicket(ticketId)
+        .then(() => console.log(`Ticket ${ticketId} eliminado de la base de datos.`))
+        .catch(error => console.error(`Error al eliminar el ticket ${ticketId}:`, error));
 }
 
 // Agregar ticket
 function agregarTicket(usuario, serie, falla, tecnico) {
-    if (tickets.includes(serie)) {
-        alert('Ya existe un ticket con esta serie de equipo.');
-        return;
-    }
+    const ticket = { usuario, serie, falla, tecnico, estado: 'pendiente', tiempo: 0 }; // Inicializar el tiempo a 0
 
-    tickets.push(serie);
-    contadorTickets++;
-    const ticketId = contadorTickets;
+    addTicket(ticket)
+        .then(id => {
+            ticket.id = id; // Asignar el ID al ticket
+            console.log('Nuevo ticket agregado con ID:', id); // Verifica el ID
+            tickets.push(ticket);
+            contadorTickets = Math.max(contadorTickets, id); // Asegurar que el contador de tickets esté actualizado
+            mostrarTicket(ticket); // Mostrar el ticket en la interfaz
+            document.getElementById('ticketForm').reset();
+        })
+        .catch(error => console.error('Error al agregar ticket:', error));
+}
 
+// Mostrar un ticket en la interfaz
+function mostrarTicket(ticket) {
     const ticketHTML = `
-        <div class="col-md-4" data-ticket-id="${ticketId}">
+        <div class="col-md-4 mb-3" data-ticket-id="${ticket.id}">
             <div class="card border-primary h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Ticket #${ticketId}</h5>
-                    <p class="card-text"><strong>Nombre del responsable:</strong> ${usuario}</p>
-                    <p class="card-text"><strong>Serie del Equipo:</strong> <span id="serie-${ticketId}">${serie}</span></p>
-                    <p class="card-text"><strong>Falla del equipo:</strong> ${falla}</p>
-                    <p class="card-text"><strong>Técnico Asignado:</strong> ${tecnico}</p>
-                    <p id="timer-${ticketId}" class="timer green">Tiempo: 0m 0s</p>
+                    <h5 class="card-title">Ticket #${ticket.id}</h5>
+                    <p class="card-text"><strong>Nombre del responsable:</strong> ${ticket.usuario}</p>
+                    <p class="card-text"><strong>Serie del Equipo:</strong> <span id="serie-${ticket.id}">${ticket.serie}</span></p>
+                    <p class="card-text"><strong>Falla del equipo:</strong> ${ticket.falla}</p>
+                    <p class="card-text"><strong>Técnico Asignado:</strong> ${ticket.tecnico}</p>
+                    <p id="timer-${ticket.id}" class="timer ${ticket.estado === 'finalizado' ? 'gray' : 'green'}">Tiempo: ${formatearTiempo(ticket.tiempo)}</p>
                     <div class="ticket-actions mt-3">
-                        <button onclick="finalizarTicket(${ticketId})" class="btn btn-danger me-2">Finalizar</button>
-                        <button onclick="eliminarTicket(${ticketId})" class="btn btn-secondary">Eliminar</button>
+                        <button onclick="finalizarTicket(${ticket.id})" class="btn btn-danger me-2" ${ticket.estado === 'finalizado' ? 'disabled' : ''}>Finalizar</button>
+                        <button onclick="eliminarTicket(${ticket.id})" class="btn btn-secondary">Eliminar</button>
                     </div>
                 </div>
             </div>
         </div>
     `;
-
     document.getElementById('ticketList').insertAdjacentHTML('beforeend', ticketHTML);
-    iniciarCronometro(ticketId);
-
-    // Agregar ticket a IndexedDB
-    const ticket = {
-        usuario,
-        serie,
-        falla,
-        tecnico,
-        tiempo: 0 // Inicializa el tiempo en segundos
-    };
-    agregarTicketDB(ticket);
+    if (ticket.estado === 'pendiente') {
+        iniciarCronometro(ticket.id, ticket.tiempo); // Iniciar el cronómetro con el tiempo cargado
+    }
 }
 
 // Cargar tickets desde IndexedDB al iniciar la página
 function cargarTicketsDesdeIndexedDB() {
-    obtenerTicketsDB(ticketsData => {
+    getTickets().then(ticketsData => {
+        tickets = ticketsData; // Cargar tickets en el array local
         ticketsData.forEach(ticket => {
-            const { usuario, serie, falla, tecnico, id, tiempo } = ticket;
-            tickets.push(serie);
-            contadorTickets = id; // Asignar el ID más alto
-            const ticketHTML = `
-                <div class="col-md-4" data-ticket-id="${id}">
-                    <div class="card border-primary h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Ticket #${id}</h5>
-                            <p class="card-text"><strong>Nombre del responsable:</strong> ${usuario}</p>
-                            <p class="card-text"><strong>Serie del Equipo:</strong> <span id="serie-${id}">${serie}</span></p>
-                            <p class="card-text"><strong>Falla del equipo:</strong> ${falla}</p>
-                            <p class="card-text"><strong>Técnico Asignado:</strong> ${tecnico}</p>
-                            <p id="timer-${id}" class="timer ${actualizarColorCronometro(tiempo)}">Tiempo: ${formatearTiempo(tiempo)}</p>
-                            <div class="ticket-actions mt-3">
-                                <button onclick="finalizarTicket(${id})" class="btn btn-danger me-2">Finalizar</button>
-                                <button onclick="eliminarTicket(${id})" class="btn btn-secondary">Eliminar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('ticketList').insertAdjacentHTML('beforeend', ticketHTML);
-            iniciarCronometro(id); // Iniciar el cronómetro con el tiempo cargado
+            contadorTickets = Math.max(contadorTickets, ticket.id); // Asegurar que el contador de tickets esté actualizado
+            mostrarTicket(ticket); // Mostrar el ticket en la interfaz
         });
-    });
+    }).catch(error => console.error('Error al cargar tickets:', error));
 }
 
 // Evento para el formulario de tickets
@@ -172,26 +149,19 @@ document.getElementById('ticketForm').addEventListener('submit', function(event)
     const falla = document.getElementById('falla').value.trim();
     const tecnico = document.getElementById('tecnico').value.trim();
 
-    if (usuario === '') {
-        alert('Por favor, ingrese el nombre del responsable.');
-        return;
-    }
-
-    if (serie === '') {
-        alert('Por favor, ingrese la serie del equipo.');
-        return;
-    }
-
-    if (falla === '') {
-        alert('Por favor, seleccione la falla del equipo.');
-        return;
-    }
-
-    if (tecnico === '') {
-        alert('Por favor, seleccione un técnico.');
+    if (!usuario || !serie || !falla || !tecnico) {
+        alert('Por favor, complete todos los campos.');
         return;
     }
 
     agregarTicket(usuario, serie, falla, tecnico);
-    document.getElementById('ticketForm').reset();
 });
+
+// Cargar tickets al cargar la página
+window.onload = () => {
+    openDB()
+        .then(() => {
+            cargarTicketsDesdeIndexedDB();  // Cargar los tickets existentes al cargar la página
+        })
+        .catch(error => console.error('Error during onload:', error));
+};
