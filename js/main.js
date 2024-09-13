@@ -1,9 +1,12 @@
+// main.js
+
 const tecnicos = [
     "Carlos Vargas", "Alexis Paniagua", "Kemdall Blanco", "Daniel Nerio", 
     "Raúl Cruz", "Alexander Gómez", "Geraldina Trujillo", "David Sermeño", 
     "Henry Marroquín", "William Martínez", "Carlos Rivas", "Wilber Del Cid", 
     "Douglas Hernández", "Victor Latin"
 ];
+
 let contadorTickets = 0;
 let cronometroIntervalos = {}; // Objeto para almacenar los intervalos del cronómetro
 let tickets = []; // Array para almacenar la serie de tickets existentes
@@ -54,6 +57,17 @@ function finalizarTicket(ticketId) {
             timerElement.textContent += " - Finalizado";
             timerElement.className = 'timer gray'; // Cambiar color a gris para indicar que está finalizado
         }
+        
+        // Actualizar ticket en IndexedDB
+        const ticket = {
+            id: ticketId,
+            usuario: document.querySelector(`[data-ticket-id="${ticketId}"] .card-text:nth-of-type(1)`).textContent.split(': ')[1],
+            serie: document.getElementById(`serie-${ticketId}`).textContent,
+            falla: document.querySelector(`[data-ticket-id="${ticketId}"] .card-text:nth-of-type(3)`).textContent.split(': ')[1],
+            tecnico: document.querySelector(`[data-ticket-id="${ticketId}"] .card-text:nth-of-type(4)`).textContent.split(': ')[1],
+            tiempo: parseInt(document.getElementById(`timer-${ticketId}`).textContent.split(' ')[1])
+        };
+        actualizarTicketDB(ticket);
     }
 }
 
@@ -70,6 +84,7 @@ function eliminarTicket(ticketId) {
     }
 
     tickets = tickets.filter(serie => serie !== document.getElementById(`serie-${ticketId}`).textContent);
+    eliminarTicketDB(ticketId);
 }
 
 // Agregar ticket
@@ -104,6 +119,48 @@ function agregarTicket(usuario, serie, falla, tecnico) {
 
     document.getElementById('ticketList').insertAdjacentHTML('beforeend', ticketHTML);
     iniciarCronometro(ticketId);
+
+    // Agregar ticket a IndexedDB
+    const ticket = {
+        usuario,
+        serie,
+        falla,
+        tecnico,
+        tiempo: 0 // Inicializa el tiempo en segundos
+    };
+    agregarTicketDB(ticket);
+}
+
+// Cargar tickets desde IndexedDB al iniciar la página
+function cargarTicketsDesdeIndexedDB() {
+    obtenerTicketsDB(ticketsData => {
+        ticketsData.forEach(ticket => {
+            const { usuario, serie, falla, tecnico, id, tiempo } = ticket;
+            tickets.push(serie);
+            contadorTickets = id; // Asignar el ID más alto
+            const ticketHTML = `
+                <div class="col-md-4" data-ticket-id="${id}">
+                    <div class="card border-primary h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Ticket #${id}</h5>
+                            <p class="card-text"><strong>Nombre del responsable:</strong> ${usuario}</p>
+                            <p class="card-text"><strong>Serie del Equipo:</strong> <span id="serie-${id}">${serie}</span></p>
+                            <p class="card-text"><strong>Falla del equipo:</strong> ${falla}</p>
+                            <p class="card-text"><strong>Técnico Asignado:</strong> ${tecnico}</p>
+                            <p id="timer-${id}" class="timer ${actualizarColorCronometro(tiempo)}">Tiempo: ${formatearTiempo(tiempo)}</p>
+                            <div class="ticket-actions mt-3">
+                                <button onclick="finalizarTicket(${id})" class="btn btn-danger me-2">Finalizar</button>
+                                <button onclick="eliminarTicket(${id})" class="btn btn-secondary">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('ticketList').insertAdjacentHTML('beforeend', ticketHTML);
+            iniciarCronometro(id); // Iniciar el cronómetro con el tiempo cargado
+        });
+    });
 }
 
 // Evento para el formulario de tickets
