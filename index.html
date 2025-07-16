@@ -1,103 +1,370 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestión de Tickets - Cronómetro</title>
-    <link href="css/styles.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #e3e9f7 0%, #f5f9ff 100%);
+            font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+        }
+        .container {
+            max-width: 1250px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+        h1 {
+            font-size: 2.7rem;
+            margin-bottom: 35px;
+            text-align: center;
+            color: #264a88;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-shadow: 0 2px 8px #bcd0e7;
+        }
+        .card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 6px 28px rgba(41, 82, 163, 0.12), 0 1.5px 3px #bcd0e7;
+            transition: box-shadow 0.25s;
+        }
+        .card:hover {
+            box-shadow: 0 14px 50px rgba(41, 82, 163, 0.18);
+        }
+        .form-label {
+            font-weight: 600;
+            color: #2952a3;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #2952a3 60%, #5bc0eb 100%);
+            border: none;
+            font-weight: 600;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px #bcd0e7;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #183366 60%, #3797bc 100%);
+        }
+        .btn-danger, .btn-secondary {
+            transition: background 0.2s;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            border: none;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .btn-secondary:hover {
+            background: #43484e;
+        }
+        .timer {
+            font-size: 1.12em;
+            padding: 8px 14px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: inline-block;
+            min-width: 135px;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .timer.green { background-color: #27ae60; color: #fff; }
+        .timer.yellow { background-color: #f6c23e; color: #222; }
+        .timer.red { background-color: #e74c3c; color: #fff; }
+        .timer.gray { background-color: #7a8ca3; color: #fff; }
+        .ticket-actions button {
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+        .tecnico-card {
+            text-align: center;
+            padding: 22px 10px;
+            border-radius: 13px;
+            background: linear-gradient(120deg, #fff 80%, #e3e9f7 100%);
+            box-shadow: 0 2px 10px rgba(41, 82, 163, 0.07);
+            margin-bottom: 18px;
+            transition: box-shadow 0.22s;
+        }
+        .tecnico-card:hover {
+            box-shadow: 0 10px 26px rgba(41, 82, 163, 0.20);
+        }
+        .tecnico-card h5 {
+            margin-bottom: 10px;
+            font-size: 1.22rem;
+            color: #2952a3;
+            font-weight: 600;
+        }
+        .tecnico-card span {
+            display: block;
+            font-size: 1.04rem;
+            color: #34495e;
+        }
+        .ticket-list-title {
+            font-size: 1.43rem;
+            color: #2952a3;
+            font-weight: 700;
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        .no-tickets {
+            text-align: center;
+            color: #7a8ca3;
+            font-size: 1.08rem;
+            font-style: italic;
+            margin-top: 20px;
+        }
+        .animate-fadein {
+            animation: fadein 1s;
+        }
+        @keyframes fadein {
+            from { opacity: 0; transform: translateY(25px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container { padding-left: 10px; padding-right: 10px; }
+            .ticket-list-title { text-align: center; }
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .tecnico-card h5 { font-size: 1rem; }
+            .ticket-list-title { font-size: 1.1rem;}
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Sistema de Gestión de Tickets</h1>
-
-        <!-- Formulario para agregar usuario y asignar técnico -->
-        <div class="card mb-4">
+        <!-- Tarjetas de técnicos -->
+        <div class="row mb-4" id="tecnicosResumen"></div>
+        <!-- Formulario de tickets -->
+        <div class="card mb-5 animate-fadein">
             <div class="card-body">
-                <h5 class="card-title">Nuevo ticket</h5>
-                <form id="ticketForm">
+                <h5 class="card-title mb-3">Nuevo ticket</h5>
+                <form id="ticketForm" autocomplete="off">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="userName" class="form-label">Nombre del responsable</label>
-                            <input type="text" class="form-control" id="userName" required>
+                            <input type="text" class="form-control" id="userName" maxlength="60" required autofocus>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="serie" class="form-label">Serie del Equipo</label>
-                            <input type="text" class="form-control" id="serie" required>
+                            <label for="grado" class="form-label">Grado académico</label>
+                            <select class="form-select" id="grado" required>
+                                <option value="">Seleccione un grado</option>
+                                <option value="Kinder 4">Kinder 4</option>
+                                <option value="Kinder 5">Kinder 5</option>
+                                <option value="Primer año">Primer año</option>
+                                <option value="Segundo año">Segundo año</option>
+                                <option value="Tercer año">Tercer año</option>
+                                <option value="Cuarto año">Cuarto año</option>
+                                <option value="Quinto año">Quinto año</option>
+                                <option value="Tercer año Bachillerato Técnico">Tercer año Bachillerato Técnico</option>
+                            </select>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="falla" class="form-label">Falla del Equipo</label>
-                            <select class="form-select" id="falla" required>
-                                <option value="">Seleccione una falla</option>
-                                <option value="No carga">No carga</option>
-                                <option value="Cargador dañado">Cargador dañado</option>
-                                <option value="Cámara no funciona">Cámara no funciona</option>
-                                <option value="Micrófono no funciona">Micrófono no funciona</option>
-                                <option value="Motherboard dañada">Motherboard dañada</option>
-                                <option value="Falla de video">Falla de video</option>
-                                <option value="Falla de audio">Falla de audio</option>
-                                <option value="Puerto de carga dañado">Puerto de carga dañado</option>
-                                <option value="Equipo se reinicia">Equipo se reinicia</option>
-                                <option value="Sobrecalentamiento">Sobrecalentamiento</option>
-                                <option value="Falla de táctil">Falla de táctil</option>
-                                <option value="Falla en bandeja de tarjeta SIM">Falla en bandeja de tarjeta SIM</option>
-                                <option value="Bandeja de chip faltante">Bandeja de chip faltante</option>
-                                <option value="Por falta de cargador">Por falta de cargador</option>
-                                <option value="Pantalla quebrada">Pantalla quebrada</option>
-                                <option value="Puerto de carga quebrado">Puerto de carga quebrado</option>
-                                <option value="Pantalla dañada">Pantalla dañada</option>
-                                <option value="Pérdida total (equipo mojado)">Pérdida total (equipo mojado)</option>
-                                <option value="Falla de táctil (equipo mojado)">Falla de táctil (equipo mojado)</option>
-                                <option value="No enciende">No enciende</option>
-                                <option value="Teclado no funciona">Teclado no funciona</option>
-                                <option value="Mousepad no funciona">Mousepad no funciona</option>
-                                <option value="Touchpad no funciona">Touchpad no funciona</option>
-                                <option value="Almacenamiento dañado">Almacenamiento dañado</option>
-                                <option value="Puerto USB dañado">Puerto USB dañado</option>
-                                <option value="Tarjeta de red (inalámbrica) dañada">Tarjeta de red (inalámbrica) dañada</option>
-                                <option value="Contraseña de BIOS">Contraseña de BIOS</option>
-                                <option value="Falla de la batería de CMOS">Falla de la batería de CMOS</option>
-                                <option value="Ventilador de disipador">Ventilador de disipador</option>
-                                <option value="Motherboard dañada (invasión de insectos)">Motherboard dañada (invasión de insectos)</option>
-                                <option value="Motherboard dañada (derrame de líquido)">Motherboard dañada (derrame de líquido)</option>
-                                <option value="Carcasa dañada">Carcasa dañada</option>
-                            </select>
+                            <label for="serie" class="form-label">Serie del equipo</label>
+                            <input type="text" class="form-control" id="serie" maxlength="50" pattern="[A-Za-z0-9-]+" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="tecnico" class="form-label">Técnico Asignado</label>
-                            <select class="form-select" id="tecnico" required>
-                                <option value="">Seleccione un técnico</option>
-                                <option value="Carlos Vargas">Carlos Vargas</option>
-                                <option value="Alexis Paniagua">Alexis Paniagua</option>
-                                <option value="Kemdall Blanco">Kemdall Blanco</option>
-                                <option value="Daniel Nerio">Daniel Nerio</option>
-                                <option value="Raúl Cruz">Raúl Cruz</option>
-                                <option value="Alexander Gómez">Alexander Gómez</option>
-                                <option value="Geraldina Trujillo">Geraldina Trujillo</option>
-                                <option value="David Sermeño">David Sermeño</option>
-                                <option value="Henry Marroquín">Henry Marroquín</option>
-                                <option value="William Martínez">William Martínez</option>
-                                <option value="Carlos Rivas">Carlos Rivas</option>
-                                <option value="Wilber Del Cid">Wilber Del Cid</option>
-                                <option value="Douglas Hernández">Douglas Hernández</option>
-                                <option value="Victor Latin">Victor Latin</option>
+                            <label for="falla" class="form-label">Falla del equipo</label>
+                            <select class="form-select" id="falla" required>
+                                <option value="">Seleccione una falla</option>
+                                <option value="Motherboard dañada (derrame de líquido)">Motherboard dañada (derrame de líquido)</option>
+                                <option value="Motherboard dañada">Motherboard dañada</option>
+                                <option value="Carcasa dañada">Carcasa dañada</option>
+                                <option value="Pantalla quebrada">Pantalla quebrada</option>
+                                <option value="Problemas de encendido">Problemas de encendido</option>
+                                <option value="Batería dañada">Batería dañada</option>
+                                <option value="No enciende">No enciende</option>
+                                <option value="Teclado dañado">Teclado dañado</option>
+                                <option value="Otro">Otro</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="observacion" class="form-label">Observaciones</label>
+                        <textarea class="form-control" id="observacion" rows="2" maxlength="200" placeholder="Detalles adicionales..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tecnico" class="form-label">Técnico asignado</label>
+                        <select class="form-select" id="tecnico" required>
+                            <option value="">Seleccione un técnico</option>
+                            <option value="Carlos Vargas">Carlos Vargas</option>
+                            <option value="Alexis Paniagua">Alexis Paniagua</option>
+                            <option value="Douglas Hernández">Douglas Hernández</option>
+                            <option value="Victor Latin">Victor Latin</option>
+                        </select>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Asignar Técnico</button>
                 </form>
             </div>
         </div>
-
-        <!-- Lista de tickets en cuadrícula -->
+        <div class="ticket-list-title">Tickets asignados</div>
         <div id="ticketList" class="row g-4"></div>
+        <div id="noTickets" class="no-tickets"></div>
     </div>
+    <script>
+        // Técnicos y control
+        const tecnicos = ["Carlos Vargas", "Alexis Paniagua", "Douglas Hernández", "Victor Latin"];
+        let ticketSequence = 0; // Ticket incremental
+        let cronometroIntervalos = {}; // idTicket: intervalo
+        let ticketsSeries = []; // Series únicas
+        let conteoTecnicos = {};
+        tecnicos.forEach(t => conteoTecnicos[t] = { asignados: 0, resueltos: 0 });
 
-     <!-- Incluye el archivo de JavaScript justo antes del cierre del body -->
-     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-     <script src="js/db.js"></script> <!-- Archivo de IndexedDB -->
-     <script src="js/main.js"></script> <!-- Archivo principal de JavaScript -->
+        // UX: Actualizar resumen de técnicos
+        function actualizarResumenTecnicos() {
+            const container = document.getElementById('tecnicosResumen');
+            container.innerHTML = '';
+            tecnicos.forEach(tecnico => {
+                const { asignados, resueltos } = conteoTecnicos[tecnico];
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="col-md-3 col-6">
+                        <div class="tecnico-card shadow-sm">
+                            <h5>${tecnico}</h5>
+                            <span>Asignados: <strong>${asignados}</strong></span>
+                            <span>Resueltos: <strong>${resueltos}</strong></span>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        // UX: Mostrar mensaje si no hay tickets
+        function mostrarMensajeNoTickets() {
+            const ticketList = document.getElementById('ticketList');
+            const noTickets = document.getElementById('noTickets');
+            if(ticketList.children.length === 0){
+                noTickets.textContent = "No hay tickets asignados actualmente.";
+            } else {
+                noTickets.textContent = "";
+            }
+        }
+
+        // Cronómetro por ticket
+        function iniciarCronometro(ticketId) {
+            let tiempo = 0;
+            const interval = setInterval(() => {
+                tiempo++;
+                const minutos = Math.floor(tiempo / 60);
+                const segundos = tiempo % 60;
+                const el = document.getElementById(`timer-${ticketId}`);
+                if (el) {
+                    el.textContent = `Tiempo: ${minutos}m ${segundos < 10 ? "0" : ""}${segundos}s`;
+                    el.className = 'timer ' + (tiempo < 300 ? 'green' : tiempo < 600 ? 'yellow' : 'red');
+                }
+            }, 1000);
+            cronometroIntervalos[ticketId] = interval;
+        }
+
+        // Finalizar ticket
+        function finalizarTicket(ticketId, tecnico) {
+            clearInterval(cronometroIntervalos[ticketId]);
+            delete cronometroIntervalos[ticketId];
+            const el = document.getElementById(`timer-${ticketId}`);
+            if (el) {
+                el.textContent += " - Finalizado";
+                el.className = 'timer gray';
+            }
+            conteoTecnicos[tecnico].resueltos++;
+            actualizarResumenTecnicos();
+            const acciones = document.querySelector(`#ticket-${ticketId} .ticket-actions`);
+            if (acciones) acciones.innerHTML = `<span class="badge bg-success">Resuelto</span>`;
+        }
+
+        // Eliminar ticket
+        function eliminarTicket(ticketId, serie, tecnico) {
+            clearInterval(cronometroIntervalos[ticketId]);
+            delete cronometroIntervalos[ticketId];
+            const ticketElem = document.getElementById(`ticket-${ticketId}`);
+            if (ticketElem) ticketElem.remove();
+            ticketsSeries = ticketsSeries.filter(s => s !== serie);
+            conteoTecnicos[tecnico].asignados = Math.max(0, conteoTecnicos[tecnico].asignados - 1);
+            actualizarResumenTecnicos();
+            mostrarMensajeNoTickets();
+        }
+
+        // Agregar ticket con validaciones
+        function agregarTicket(usuario, grado, serie, falla, observacion, tecnico) {
+            // Validaciones adicionales
+            if (!usuario || !grado || !serie || !falla || !tecnico) {
+                alert('Por favor complete todos los campos requeridos.');
+                return;
+            }
+            if (!/^[A-Za-z0-9-]+$/.test(serie)) {
+                alert('La serie solo debe contener letras, números o guiones.');
+                return;
+            }
+            if (ticketsSeries.includes(serie)) {
+                alert('Ya existe un ticket con esta serie.');
+                return;
+            }
+            ticketsSeries.push(serie);
+            ticketSequence++;
+            const ticketId = ticketSequence;
+            conteoTecnicos[tecnico].asignados++;
+            actualizarResumenTecnicos();
+            document.getElementById('ticketList').insertAdjacentHTML('beforeend', `
+                <div id="ticket-${ticketId}" class="col-md-4 animate-fadein">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">Ticket #${ticketId}</h5>
+                            <p><strong>Responsable:</strong> ${usuario}</p>
+                            <p><strong>Grado:</strong> ${grado}</p>
+                            <p><strong>Serie:</strong> <span id="serie-${ticketId}">${serie}</span></p>
+                            <p><strong>Falla:</strong> ${falla}</p>
+                            <p><strong>Observaciones:</strong> ${observacion ? observacion : 'Ninguna'}</p>
+                            <p><strong>Técnico:</strong> ${tecnico}</p>
+                            <p id="timer-${ticketId}" class="timer green">Tiempo: 0m 00s</p>
+                            <div class="ticket-actions mt-2">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="finalizarTicket(${ticketId}, '${tecnico}')">
+                                    <span class="bi bi-check-circle"></span> Finalizar
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="eliminarTicket(${ticketId}, '${serie}', '${tecnico}')">
+                                    <span class="bi bi-trash"></span> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+            iniciarCronometro(ticketId);
+            mostrarMensajeNoTickets();
+        }
+
+        // Evento submit formulario
+        document.getElementById('ticketForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const usuario = document.getElementById('userName').value.trim();
+            const grado = document.getElementById('grado').value.trim();
+            const serie = document.getElementById('serie').value.trim();
+            const falla = document.getElementById('falla').value.trim();
+
+
+        
+            const observacion = document.getElementById('observacion').value.trim();
+            const tecnico = document.getElementById('tecnico').value.trim();
+            agregarTicket(usuario, grado, serie, falla, observacion, tecnico);
+            document.getElementById('ticketForm').reset();
+            document.getElementById('userName').focus();
+        });
+
+        // Exponer funciones globalmente
+        window.finalizarTicket = finalizarTicket;
+        window.eliminarTicket = eliminarTicket;
+
+        // Inicializar
+        actualizarResumenTecnicos();
+        mostrarMensajeNoTickets();
+    </script>
+    <!-- Bootstrap Icons for better button icons (optional, can comment if you don't want icons) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
